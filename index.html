@@ -1,0 +1,2848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillQuest - Learning Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #030d1a;
+            --bg-secondary: #051428;
+            --bg-card: #071e3d;
+            --bg-card-hover: #0a2547;
+            --accent-blue: #1565c0;
+            --accent-light: #1e88e5;
+            --accent-glow: #42a5f5;
+            --accent-cyan: #00bcd4;
+            --gold: #ffd700;
+            --gold-light: #ffec6e;
+            --silver: #c0c0c0;
+            --bronze: #cd7f32;
+            --text-primary: #ffffff;
+            --text-secondary: #90caf9;
+            --text-muted: #546e8a;
+            --success: #00e676;
+            --danger: #ff5252;
+            --border: #0d47a1;
+            --xp-color: #7c4dff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(21, 101, 192, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 188, 212, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(124, 77, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Stars background */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle linear infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 3px; }
+
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(3, 13, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(21, 101, 192, 0.3);
+            padding: 12px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 20px rgba(21, 101, 192, 0.5);
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff, var(--accent-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo span {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: block;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: -4px;
+        }
+
+        /* Player Stats Bar */
+        .stats-bar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(5, 20, 40, 0.8);
+            border: 1px solid rgba(21, 101, 192, 0.3);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+
+        .stat-item .stat-icon {
+            font-size: 18px;
+        }
+
+        .stat-item .stat-val {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .stat-item .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Level badge */
+        .level-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, rgba(124, 77, 255, 0.2), rgba(21, 101, 192, 0.2));
+            border: 1px solid rgba(124, 77, 255, 0.5);
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .level-badge:hover {
+            background: linear-gradient(135deg, rgba(124, 77, 255, 0.3), rgba(21, 101, 192, 0.3));
+            box-shadow: 0 0 20px rgba(124, 77, 255, 0.3);
+        }
+
+        .level-num {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 10px var(--gold);
+        }
+
+        .level-text {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* XP Bar */
+        .xp-section {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 150px;
+        }
+
+        .xp-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .xp-bar-outer {
+            height: 8px;
+            background: rgba(124, 77, 255, 0.15);
+            border-radius: 4px;
+            border: 1px solid rgba(124, 77, 255, 0.3);
+            overflow: hidden;
+        }
+
+        .xp-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, var(--xp-color), var(--accent-glow));
+            border-radius: 4px;
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 10px rgba(124, 77, 255, 0.5);
+        }
+
+        /* Main Content */
+        main {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        /* Profile Card */
+        .profile-card {
+            background: linear-gradient(135deg, var(--bg-card), rgba(21, 101, 192, 0.1));
+            border: 1px solid rgba(21, 101, 192, 0.3);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(21, 101, 192, 0.05) 0%, transparent 60%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 16px;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 0 30px rgba(21, 101, 192, 0.5);
+            border: 3px solid var(--accent-glow);
+        }
+
+        .avatar-level {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--gold), #ff8c00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 900;
+            color: #000;
+            border: 2px solid var(--bg-primary);
+        }
+
+        .player-name {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .player-title {
+            text-align: center;
+            font-size: 12px;
+            color: var(--accent-cyan);
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+
+        .mini-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .mini-stat {
+            background: rgba(5, 20, 40, 0.6);
+            border: 1px solid rgba(21, 101, 192, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .mini-stat-val {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent-glow);
+        }
+
+        .mini-stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Streak */
+        .streak-card {
+            background: linear-gradient(135deg, rgba(255, 87, 34, 0.1), rgba(255, 152, 0, 0.1));
+            border: 1px solid rgba(255, 152, 0, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .streak-icon {
+            font-size: 32px;
+            animation: flicker 1.5s ease-in-out infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .streak-info h3 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #ff9800;
+        }
+
+        .streak-info p {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Quick Stats Row */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .quick-stat-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(21, 101, 192, 0.2);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.3s;
+            cursor: default;
+        }
+
+        .quick-stat-card:hover {
+            border-color: var(--accent-light);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(21, 101, 192, 0.2);
+        }
+
+        .qs-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .qs-icon.blue { background: rgba(21, 101, 192, 0.2); }
+        .qs-icon.gold { background: rgba(255, 215, 0, 0.15); }
+        .qs-icon.cyan { background: rgba(0, 188, 212, 0.15); }
+        .qs-icon.purple { background: rgba(124, 77, 255, 0.2); }
+
+        .qs-info h3 {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .qs-info p {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-glow);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-light));
+            color: white;
+            box-shadow: 0 4px 15px rgba(21, 101, 192, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(21, 101, 192, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(21, 101, 192, 0.15);
+            color: var(--text-secondary);
+            border: 1px solid rgba(21, 101, 192, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(21, 101, 192, 0.25);
+            color: white;
+        }
+
+        .btn-danger {
+            background: rgba(255, 82, 82, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 82, 82, 0.25);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        /* Category Section */
+        .categories-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .category-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(21, 101, 192, 0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .category-card:hover {
+            border-color: rgba(21, 101, 192, 0.5);
+            box-shadow: 0 5px 30px rgba(21, 101, 192, 0.15);
+        }
+
+        .category-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            background: rgba(5, 20, 40, 0.4);
+            border-bottom: 1px solid rgba(21, 101, 192, 0.15);
+            transition: background 0.3s;
+        }
+
+        .category-header:hover {
+            background: rgba(21, 101, 192, 0.1);
+        }
+
+        .category-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .category-emoji {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            background: rgba(21, 101, 192, 0.2);
+            border: 1px solid rgba(21, 101, 192, 0.3);
+        }
+
+        .category-info h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .category-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .meta-tag {
+            font-size: 11px;
+            color: var(--text-muted);
+            background: rgba(5, 20, 40, 0.5);
+            padding: 2px 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(21, 101, 192, 0.15);
+        }
+
+        .category-progress-mini {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+            min-width: 120px;
+        }
+
+        .progress-bar-mini {
+            height: 6px;
+            background: rgba(21, 101, 192, 0.15);
+            border-radius: 3px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .progress-pct {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-glow);
+        }
+
+        .collapse-icon {
+            font-size: 18px;
+            color: var(--text-muted);
+            transition: transform 0.3s;
+        }
+
+        .category-card.collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+
+        /* Course Items */
+        .courses-list {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .category-card.collapsed .courses-list {
+            display: none;
+        }
+
+        .course-item {
+            background: rgba(5, 20, 40, 0.5);
+            border: 1px solid rgba(21, 101, 192, 0.15);
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .course-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--accent-light);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .course-item:hover {
+            border-color: rgba(21, 101, 192, 0.4);
+            background: rgba(21, 101, 192, 0.08);
+            transform: translateX(3px);
+        }
+
+        .course-item:hover::before {
+            opacity: 1;
+        }
+
+        .course-item.completed {
+            background: rgba(0, 230, 118, 0.05);
+            border-color: rgba(0, 230, 118, 0.2);
+        }
+
+        .course-item.completed::before {
+            background: var(--success);
+            opacity: 1;
+        }
+
+        /* Custom Checkbox */
+        .custom-checkbox {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .custom-checkbox input {
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: rgba(21, 101, 192, 0.1);
+            border: 2px solid rgba(21, 101, 192, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .custom-checkbox input:checked + .checkmark {
+            background: linear-gradient(135deg, #00c853, #00e676);
+            border-color: var(--success);
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
+        }
+
+        .custom-checkbox input:checked + .checkmark::after {
+            content: '✓';
+            color: white;
+            font-weight: 900;
+        }
+
+        .course-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .course-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color 0.3s;
+        }
+
+        .course-item.completed .course-name {
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .course-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .course-duration {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .difficulty-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .diff-beginner { background: rgba(0, 230, 118, 0.1); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.2); }
+        .diff-intermediate { background: rgba(255, 193, 7, 0.1); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.2); }
+        .diff-advanced { background: rgba(255, 82, 82, 0.1); color: #ff5252; border: 1px solid rgba(255, 82, 82, 0.2); }
+
+        .course-xp {
+            font-size: 11px;
+            color: var(--xp-color);
+            font-weight: 600;
+        }
+
+        .course-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .link-btn {
+            width: 34px;
+            height: 34px;
+            background: rgba(21, 101, 192, 0.15);
+            border: 1px solid rgba(21, 101, 192, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: var(--accent-glow);
+            font-size: 16px;
+        }
+
+        .link-btn:hover {
+            background: rgba(21, 101, 192, 0.3);
+            box-shadow: 0 0 15px rgba(21, 101, 192, 0.3);
+            transform: scale(1.1);
+        }
+
+        .delete-btn {
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--danger);
+            font-size: 14px;
+        }
+
+        .delete-btn:hover {
+            background: rgba(255, 82, 82, 0.25);
+            transform: scale(1.1);
+        }
+
+        /* Add course input area */
+        .add-course-area {
+            padding: 12px;
+            border-top: 1px solid rgba(21, 101, 192, 0.1);
+            display: none;
+        }
+
+        .add-course-area.active {
+            display: block;
+        }
+
+        .add-course-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .form-input {
+            background: rgba(5, 20, 40, 0.8);
+            border: 1px solid rgba(21, 101, 192, 0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-light);
+            box-shadow: 0 0 15px rgba(21, 101, 192, 0.2);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-select {
+            background: rgba(5, 20, 40, 0.8);
+            border: 1px solid rgba(21, 101, 192, 0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .form-select option {
+            background: var(--bg-secondary);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid rgba(21, 101, 192, 0.4);
+            border-radius: 24px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 50px rgba(21, 101, 192, 0.2);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal h2 {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--danger);
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 82, 82, 0.25);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Reward Animation */
+        .reward-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 2000;
+            text-align: center;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .reward-popup.active {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .reward-popup.fade-out {
+            transform: translate(-50%, -70%) scale(0.8);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+
+        .reward-card {
+            background: linear-gradient(135deg, rgba(7, 30, 61, 0.98), rgba(21, 101, 192, 0.3));
+            border: 2px solid var(--gold);
+            border-radius: 24px;
+            padding: 30px 40px;
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.3), 0 25px 60px rgba(0, 0, 0, 0.7);
+        }
+
+        .reward-emoji {
+            font-size: 60px;
+            display: block;
+            margin-bottom: 12px;
+            animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        .reward-title {
+            font-size: 26px;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 20px var(--gold);
+            margin-bottom: 8px;
+        }
+
+        .reward-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .reward-coins {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid var(--gold);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--gold);
+        }
+
+        /* Floating coins animation */
+        .coin-burst {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1999;
+        }
+
+        .coin-particle {
+            position: absolute;
+            font-size: 20px;
+            animation: coinFly 1.5s ease-out forwards;
+        }
+
+        @keyframes coinFly {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0.3); opacity: 0; }
+        }
+
+        /* Level Up Animation */
+        .levelup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .levelup-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .levelup-content {
+            text-align: center;
+        }
+
+        .levelup-text {
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light), #ff8c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            animation: levelPulse 0.5s ease-in-out infinite alternate;
+            margin-bottom: 10px;
+        }
+
+        @keyframes levelPulse {
+            from { transform: scale(1); filter: brightness(1); }
+            to { transform: scale(1.05); filter: brightness(1.2); }
+        }
+
+        .levelup-num {
+            font-size: 100px;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 60px var(--gold);
+            line-height: 1;
+        }
+
+        .levelup-sub {
+            font-size: 20px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+        }
+
+        /* Achievements */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .achievement-item {
+            background: rgba(5, 20, 40, 0.6);
+            border: 1px solid rgba(21, 101, 192, 0.2);
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .achievement-item.unlocked {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+        }
+
+        .achievement-item.locked {
+            opacity: 0.4;
+            filter: grayscale(1);
+        }
+
+        .achievement-icon {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .achievement-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .achievement-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .achievement-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            font-size: 10px;
+        }
+
+        /* Leaderboard / Milestones */
+        .milestones-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .milestone-item {
+            background: rgba(5, 20, 40, 0.5);
+            border: 1px solid rgba(21, 101, 192, 0.15);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .milestone-item.achieved {
+            border-color: rgba(0, 230, 118, 0.3);
+            background: rgba(0, 230, 118, 0.04);
+        }
+
+        .milestone-icon {
+            font-size: 24px;
+            width: 44px;
+            text-align: center;
+        }
+
+        .milestone-info {
+            flex: 1;
+        }
+
+        .milestone-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .milestone-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .milestone-reward {
+            font-size: 13px;
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: rgba(5, 20, 40, 0.5);
+            border: 1px solid rgba(21, 101, 192, 0.2);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            border-radius: 9px;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-light));
+            color: white;
+            box-shadow: 0 4px 15px rgba(21, 101, 192, 0.4);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(21, 101, 192, 0.15);
+            color: var(--text-secondary);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Notification Toast */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid rgba(21, 101, 192, 0.4);
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 280px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.fade-out {
+            animation: slideOut 0.3s ease forwards;
+        }
+
+        @keyframes slideOut {
+            to { transform: translateX(120%); opacity: 0; }
+        }
+
+        .toast-icon { font-size: 22px; }
+        .toast-text { font-size: 13px; font-weight: 600; }
+        .toast-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .empty-icon { font-size: 50px; margin-bottom: 12px; }
+        .empty-state h3 { font-size: 18px; color: var(--text-secondary); margin-bottom: 8px; }
+        .empty-state p { font-size: 13px; }
+
+        /* Add Category Form */
+        .add-category-form {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        /* Right sidebar */
+        .right-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Progress Ring */
+        .progress-ring-container {
+            text-align: center;
+            padding: 16px;
+            background: rgba(5, 20, 40, 0.4);
+            border-radius: 14px;
+            border: 1px solid rgba(21, 101, 192, 0.15);
+        }
+
+        .progress-ring-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .ring-svg {
+            transform: rotate(-90deg);
+        }
+
+        .ring-track {
+            fill: none;
+            stroke: rgba(21, 101, 192, 0.15);
+            stroke-width: 8;
+        }
+
+        .ring-progress {
+            fill: none;
+            stroke: url(#ringGradient);
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .ring-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--accent-glow);
+        }
+
+        .ring-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Daily Goals */
+        .daily-goals {
+            background: var(--bg-card);
+            border: 1px solid rgba(21, 101, 192, 0.2);
+            border-radius: 16px;
+            padding: 18px;
+        }
+
+        .daily-goal-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(21, 101, 192, 0.08);
+        }
+
+        .daily-goal-item:last-child {
+            border-bottom: none;
+        }
+
+        .goal-check {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid rgba(21, 101, 192, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .goal-check.done {
+            background: var(--success);
+            border-color: var(--success);
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
+        }
+
+        .goal-text {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .goal-text.done {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .goal-xp {
+            font-size: 11px;
+            color: var(--xp-color);
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            header {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .stats-bar {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .add-course-form {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .quick-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .level-badge .level-num { font-size: 18px; }
+            .logo h1 { font-size: 20px; }
+        }
+
+        /* Name edit */
+        .name-edit-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .name-edit-btn:hover {
+            color: var(--accent-glow);
+            background: rgba(21, 101, 192, 0.1);
+        }
+
+        /* Confetti */
+        .confetti-piece {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 4000;
+            pointer-events: none;
+            animation: confettiFall linear forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Gradient text utility */
+        .gradient-gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Note / edit field */
+        .course-note {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 3px;
+            font-style: italic;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
+        }
+
+        /* Filter bar */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(5, 20, 40, 0.6);
+            border: 1px solid rgba(21, 101, 192, 0.2);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-chip.active, .filter-chip:hover {
+            background: rgba(21, 101, 192, 0.2);
+            border-color: var(--accent-light);
+            color: var(--text-primary);
+        }
+
+        /* Spin animation for coin */
+        @keyframes spin {
+            from { transform: rotateY(0); }
+            to { transform: rotateY(360deg); }
+        }
+
+        .coin-spin {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Stars Background -->
+<div class="stars" id="stars"></div>
+
+<!-- Header -->
+<header>
+    <div class="logo">
+        <div class="logo-icon">🎮</div>
+        <div>
+            <h1>SkillQuest</h1>
+            <span>Learning Tracker RPG</span>
+        </div>
+    </div>
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-icon">🪙</span>
+            <div>
+                <div class="stat-val" id="header-coins">0</div>
+                <div class="stat-label">Coins</div>
+            </div>
+        </div>
+        <div class="xp-section">
+            <div class="xp-label">
+                <span>XP</span>
+                <span id="xp-display">0 / 100</span>
+            </div>
+            <div class="xp-bar-outer">
+                <div class="xp-bar-inner" id="xp-bar" style="width: 0%"></div>
+            </div>
+        </div>
+        <div class="level-badge" onclick="openLevelModal()">
+            <div>
+                <div class="level-text">LEVEL</div>
+                <div class="level-num" id="header-level">1</div>
+            </div>
+            <span>⚡</span>
+        </div>
+    </div>
+</header>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Reward Popup -->
+<div class="reward-popup" id="reward-popup">
+    <div class="reward-card">
+        <span class="reward-emoji" id="reward-emoji">🎉</span>
+        <div class="reward-title" id="reward-title">Course Complete!</div>
+        <div class="reward-subtitle" id="reward-subtitle">You earned rewards</div>
+        <div class="reward-coins">
+            <span>🪙</span>
+            <span id="reward-coins-val">+50</span>
+            <span style="font-size:14px; color: var(--xp-color);" id="reward-xp-val">+30 XP</span>
+        </div>
+    </div>
+</div>
+
+<!-- Level Up Overlay -->
+<div class="levelup-overlay" id="levelup-overlay">
+    <div class="levelup-content">
+        <div class="levelup-text">LEVEL UP!</div>
+        <div class="levelup-num" id="levelup-num">2</div>
+        <div class="levelup-sub" id="levelup-sub">You've reached a new level!</div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal-overlay" id="cat-modal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('cat-modal')">✕</button>
+        <h2>📁 Add New Category</h2>
+        <div class="form-group">
+            <label class="form-label">Category Name</label>
+            <input type="text" class="form-input" id="cat-name" placeholder="e.g. Web Development" style="width:100%">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Emoji / Icon</label>
+                <input type="text" class="form-input" id="cat-emoji" placeholder="e.g. 💻" style="width:100%">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Color Theme</label>
+                <select class="form-select" id="cat-color" style="width:100%">
+                    <option value="#1565c0">Blue</option>
+                    <option value="#7c4dff">Purple</option>
+                    <option value="#00bcd4">Cyan</option>
+                    <option value="#00c853">Green</option>
+                    <option value="#ff6d00">Orange</option>
+                    <option value="#f50057">Pink</option>
+                </select>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;">
+            <button class="btn btn-secondary" onclick="closeModal('cat-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="addCategory()">✨ Create Category</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Course Modal -->
+<div class="modal-overlay" id="course-modal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('course-modal')">✕</button>
+        <h2>🎬 Add New Course</h2>
+        <div class="form-group">
+            <label class="form-label">Course / Video Name</label>
+            <input type="text" class="form-input" id="course-name-input" placeholder="e.g. JavaScript Full Course" style="width:100%">
+        </div>
+        <div class="form-group">
+            <label class="form-label">YouTube / Resource URL</label>
+            <input type="url" class="form-input" id="course-url-input" placeholder="https://youtube.com/watch?v=..." style="width:100%">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-select" id="course-cat-select" style="width:100%">
+            </select>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Duration</label>
+                <input type="text" class="form-input" id="course-duration" placeholder="e.g. 4 hours" style="width:100%">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Difficulty</label>
+                <select class="form-select" id="course-difficulty" style="width:100%">
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Notes (optional)</label>
+            <input type="text" class="form-input" id="course-note-input" placeholder="Add a note..." style="width:100%">
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;">
+            <button class="btn btn-secondary" onclick="closeModal('course-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="addCourse()">🚀 Add Course</button>
+        </div>
+    </div>
+</div>
+
+<!-- Level Info Modal -->
+<div class="modal-overlay" id="level-modal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('level-modal')">✕</button>
+        <h2>⚡ Level Details</h2>
+        <div id="level-modal-content"></div>
+    </div>
+</div>
+
+<!-- Main -->
+<main>
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('dashboard')">🏠 Dashboard</button>
+        <button class="tab-btn" onclick="switchTab('courses')">📚 My Courses</button>
+        <button class="tab-btn" onclick="switchTab('achievements')">🏆 Achievements</button>
+        <button class="tab-btn" onclick="switchTab('milestones')">🎯 Milestones</button>
+    </div>
+
+    <!-- DASHBOARD TAB -->
+    <div class="tab-content active" id="tab-dashboard">
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <div class="quick-stat-card">
+                <div class="qs-icon blue">📚</div>
+                <div class="qs-info">
+                    <h3 id="stat-total">0</h3>
+                    <p>Total Courses</p>
+                </div>
+            </div>
+            <div class="quick-stat-card">
+                <div class="qs-icon gold">✅</div>
+                <div class="qs-info">
+                    <h3 id="stat-completed">0</h3>
+                    <p>Completed</p>
+                </div>
+            </div>
+            <div class="quick-stat-card">
+                <div class="qs-icon cyan">🪙</div>
+                <div class="qs-info">
+                    <h3 id="stat-coins">0</h3>
+                    <p>Coins Earned</p>
+                </div>
+            </div>
+            <div class="quick-stat-card">
+                <div class="qs-icon purple">🏆</div>
+                <div class="qs-info">
+                    <h3 id="stat-achievements">0</h3>
+                    <p>Achievements</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Left: Profile -->
+            <div>
+                <div class="profile-card" style="margin-bottom:20px;">
+                    <div class="avatar-container">
+                        <div class="avatar" id="profile-avatar">🧙</div>
+                        <div class="avatar-level" id="profile-level-badge">1</div>
+                    </div>
+                    <div style="text-align:center; margin-bottom:4px;">
+                        <span class="player-name" id="profile-name">Adventurer</span>
+                        <button class="name-edit-btn" onclick="editName()">✏️</button>
+                    </div>
+                    <div class="player-title" id="player-title">🌱 Novice Learner</div>
+
+                    <div class="mini-stats">
+                        <div class="mini-stat">
+                            <div class="mini-stat-val" id="mini-coins">0</div>
+                            <div class="mini-stat-label">🪙 Coins</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="mini-stat-val" id="mini-xp">0</div>
+                            <div class="mini-stat-label">⚡ Total XP</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="mini-stat-val" id="mini-done">0</div>
+                            <div class="mini-stat-label">✅ Done</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="mini-stat-val" id="mini-streak">0</div>
+                            <div class="mini-stat-label">🔥 Streak</div>
+                        </div>
+                    </div>
+
+                    <div class="streak-card">
+                        <span class="streak-icon">🔥</span>
+                        <div class="streak-info">
+                            <h3 id="streak-days">0 Days</h3>
+                            <p>Current Learning Streak</p>
+                        </div>
+                    </div>
+
+                    <!-- Overall Progress Ring -->
+                    <div class="progress-ring-container">
+                        <div class="progress-ring-label">Overall Completion</div>
+                        <svg width="100" height="100" class="ring-svg" style="display:block;margin:0 auto;">
+                            <defs>
+                                <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#1565c0"/>
+                                    <stop offset="100%" style="stop-color:#42a5f5"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="ring-track" cx="50" cy="50" r="40"/>
+                            <circle class="ring-progress" cx="50" cy="50" r="40"
+                                id="ring-progress"
+                                stroke-dasharray="251.2"
+                                stroke-dashoffset="251.2"/>
+                        </svg>
+                        <div class="ring-value" id="ring-pct">0%</div>
+                        <div class="ring-subtitle">courses completed</div>
+                    </div>
+                </div>
+
+                <!-- Daily Goals -->
+                <div class="daily-goals">
+                    <div class="section-header" style="margin-bottom:10px;">
+                        <div class="section-title" style="font-size:16px;">
+                            <span class="dot"></span> Daily Goals
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="refreshDailyGoals()">🔄</button>
+                    </div>
+                    <div id="daily-goals-list">
+                        <!-- Generated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Recent + Categories overview -->
+            <div class="right-sidebar">
+                <!-- Recent Activity -->
+                <div>
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="dot"></span> Recent Activity
+                        </div>
+                    </div>
+                    <div id="recent-activity" style="display:flex; flex-direction:column; gap:8px;">
+                        <div class="empty-state" style="padding:20px;">
+                            <div class="empty-icon">📋</div>
+                            <p>No activity yet. Start learning!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Overview -->
+                <div>
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="dot"></span> Category Progress
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('cat-modal')">+ Category</button>
+                    </div>
+                    <div id="cat-overview" style="display:flex; flex-direction:column; gap:10px;">
+                        <div class="empty-state" style="padding:20px;">
+                            <div class="empty-icon">📁</div>
+                            <p>No categories yet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Add -->
+                <div>
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="dot"></span> Quick Add Course
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="openAddCourseModal()">+ Course</button>
+                    </div>
+                    <p style="font-size:12px; color:var(--text-muted);">Add YouTube videos, tutorials, and free resources to track your learning journey.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COURSES TAB -->
+    <div class="tab-content" id="tab-courses">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+            <div>
+                <h2 style="font-size:22px; font-weight:800;">📚 My Learning Library</h2>
+                <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Track all your free YouTube courses and resources</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-secondary" onclick="openModal('cat-modal')">📁 New Category</button>
+                <button class="btn btn-primary" onclick="openAddCourseModal()">🚀 Add Course</button>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <button class="filter-chip active" onclick="setFilter('all', this)">All</button>
+            <button class="filter-chip" onclick="setFilter('pending', this)">⏳ In Progress</button>
+            <button class="filter-chip" onclick="setFilter('completed', this)">✅ Completed</button>
+            <button class="filter-chip" onclick="setFilter('beginner', this)">🟢 Beginner</button>
+            <button class="filter-chip" onclick="setFilter('intermediate', this)">🟡 Intermediate</button>
+            <button class="filter-chip" onclick="setFilter('advanced', this)">🔴 Advanced</button>
+        </div>
+
+        <!-- Categories & Courses -->
+        <div class="categories-wrapper" id="categories-list">
+            <div class="empty-state">
+                <div class="empty-icon">🚀</div>
+                <h3>No courses yet!</h3>
+                <p>Add a category and start adding your YouTube learning resources</p>
+                <button class="btn btn-primary" style="margin-top:16px;" onclick="openModal('cat-modal')">+ Add Category</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACHIEVEMENTS TAB -->
+    <div class="tab-content" id="tab-achievements">
+        <div style="margin-bottom:20px;">
+            <h2 style="font-size:22px; font-weight:800;">🏆 Achievements</h2>
+            <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Unlock badges by completing learning milestones</p>
+        </div>
+        <div class="achievements-grid" id="achievements-grid">
+            <!-- Generated by JS -->
+        </div>
+    </div>
+
+    <!-- MILESTONES TAB -->
+    <div class="tab-content" id="tab-milestones">
+        <div style="margin-bottom:20px;">
+            <h2 style="font-size:22px; font-weight:800;">🎯 Learning Milestones</h2>
+            <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Complete milestones to earn bonus coins and XP</p>
+        </div>
+        <div class="milestones-list" id="milestones-list">
+            <!-- Generated by JS -->
+        </div>
+    </div>
+</main>
+
+<script>
+// ===================== DATA =====================
+let gameData = {
+    playerName: 'Adventurer',
+    coins: 0,
+    totalXP: 0,
+    level: 1,
+    currentXP: 0,
+    streak: 0,
+    lastActivity: null,
+    categories: [],
+    courses: [],
+    achievements: [],
+    activityLog: [],
+    dailyGoals: []
+};
+
+// ===================== LEVELS =====================
+const LEVELS = [
+    { level: 1, xpRequired: 0, title: '🌱 Novice Learner', xpToNext: 100 },
+    { level: 2, xpRequired: 100, title: '📖 Knowledge Seeker', xpToNext: 200 },
+    { level: 3, xpRequired: 300, title: '💡 Curious Mind', xpToNext: 300 },
+    { level: 4, xpRequired: 600, title: '⚡ Skill Builder', xpToNext: 400 },
+    { level: 5, xpRequired: 1000, title: '🔥 Dedicated Student', xpToNext: 500 },
+    { level: 6, xpRequired: 1500, title: '🎯 Focus Master', xpToNext: 600 },
+    { level: 7, xpRequired: 2100, title: '🛡️ Learning Warrior', xpToNext: 800 },
+    { level: 8, xpRequired: 2900, title: '⚔️ Knowledge Knight', xpToNext: 1000 },
+    { level: 9, xpRequired: 3900, title: '🧙 Skill Wizard', xpToNext: 1200 },
+    { level: 10, xpRequired: 5100, title: '👑 Grand Master', xpToNext: 9999 }
+];
+
+const AVATARS_BY_LEVEL = ['🌱','📖','💡','⚡','🔥','🎯','🛡️','⚔️','🧙','👑'];
+
+// ===================== ACHIEVEMENTS DEF =====================
+const ACHIEVEMENTS_DEF = [
+    { id: 'first_complete', icon: '🎯', name: 'First Step', desc: 'Complete your first course', condition: d => d.courses.filter(c=>c.completed).length >= 1 },
+    { id: 'five_complete', icon: '⭐', name: 'High Five', desc: 'Complete 5 courses', condition: d => d.courses.filter(c=>c.completed).length >= 5 },
+    { id: 'ten_complete', icon: '🔟', name: 'Perfect Ten', desc: 'Complete 10 courses', condition: d => d.courses.filter(c=>c.completed).length >= 10 },
+    { id: 'twenty_complete', icon: '💎', name: 'Diamond Learner', desc: 'Complete 20 courses', condition: d => d.courses.filter(c=>c.completed).length >= 20 },
+    { id: 'first_category', icon: '📁', name: 'Organizer', desc: 'Create your first category', condition: d => d.categories.length >= 1 },
+    { id: 'three_categories', icon: '🗂️', name: 'Planner', desc: 'Create 3 categories', condition: d => d.categories.length >= 3 },
+    { id: 'coin_100', icon: '🪙', name: 'Coin Collector', desc: 'Earn 100 coins', condition: d => d.coins >= 100 },
+    { id: 'coin_500', icon: '💰', name: 'Rich Scholar', desc: 'Earn 500 coins', condition: d => d.coins >= 500 },
+    { id: 'coin_1000', icon: '🤑', name: 'Coin Millionaire', desc: 'Earn 1000 coins', condition: d => d.coins >= 1000 },
+    { id: 'level_3', icon: '⚡', name: 'Rising Star', desc: 'Reach Level 3', condition: d => d.level >= 3 },
+    { id: 'level_5', icon: '🌟', name: 'Halfway Hero', desc: 'Reach Level 5', condition: d => d.level >= 5 },
+    { id: 'level_10', icon: '👑', name: 'Grand Master', desc: 'Reach Level 10', condition: d => d.level >= 10 },
+    { id: 'streak_3', icon: '🔥', name: 'On Fire', desc: '3 day streak', condition: d => d.streak >= 3 },
+    { id: 'streak_7', icon: '🌪️', name: 'Unstoppable', desc: '7 day streak', condition: d => d.streak >= 7 },
+    { id: 'add_ten', icon: '📚', name: 'Library Builder', desc: 'Add 10 courses to library', condition: d => d.courses.length >= 10 },
+    { id: 'all_category', icon: '🎓', name: 'Completionist', desc: 'Complete all courses in a category', condition: d => {
+        return d.categories.some(cat => {
+            const catCourses = d.courses.filter(c => c.categoryId === cat.id);
+            return catCourses.length > 0 && catCourses.every(c => c.completed);
+        });
+    }},
+];
+
+// ===================== MILESTONES =====================
+const MILESTONES_DEF = [
+    { id: 'm1', icon: '🚀', name: 'Launch Pad', desc: 'Add your first course', coins: 20, xp: 10, condition: d => d.courses.length >= 1 },
+    { id: 'm2', icon: '🎯', name: 'First Victory', desc: 'Complete your first course', coins: 50, xp: 30, condition: d => d.courses.filter(c=>c.completed).length >= 1 },
+    { id: 'm3', icon: '📦', name: 'Category Pro', desc: 'Create 2 categories', coins: 30, xp: 20, condition: d => d.categories.length >= 2 },
+    { id: 'm4', icon: '🔥', name: 'Hot Streak', desc: 'Complete 3 courses', coins: 100, xp: 60, condition: d => d.courses.filter(c=>c.completed).length >= 3 },
+    { id: 'm5', icon: '💫', name: 'Halfway Hero', desc: 'Complete 5 courses', coins: 150, xp: 80, condition: d => d.courses.filter(c=>c.completed).length >= 5 },
+    { id: 'm6', icon: '🌟', name: 'Star Learner', desc: 'Reach Level 3', coins: 100, xp: 0, condition: d => d.level >= 3 },
+    { id: 'm7', icon: '⚡', name: 'Power Level', desc: 'Earn 200 total XP', coins: 80, xp: 0, condition: d => d.totalXP >= 200 },
+    { id: 'm8', icon: '💰', name: 'Coin Hoarder', desc: 'Collect 300 coins', coins: 50, xp: 50, condition: d => d.coins >= 300 },
+    { id: 'm9', icon: '🎓', name: 'Scholar', desc: 'Complete 10 courses', coins: 300, xp: 150, condition: d => d.courses.filter(c=>c.completed).length >= 10 },
+    { id: 'm10', icon: '👑', name: 'Grand Master', desc: 'Reach Level 5', coins: 500, xp: 0, condition: d => d.level >= 5 },
+];
+
+let achievedMilestones = new Set();
+let currentFilter = 'all';
+
+// ===================== INIT =====================
+function init() {
+    loadData();
+    generateStars();
+    generateDailyGoals();
+    renderAll();
+    updateStreak();
+    setInterval(autoSave, 5000);
+}
+
+function generateStars() {
+    const container = document.getElementById('stars');
+    for(let i = 0; i < 80; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        const size = Math.random() * 2.5 + 0.5;
+        star.style.cssText = `
+            width: ${size}px;
+            height: ${size}px;
+            left: ${Math.random() * 100}%;
+            top: ${Math.random() * 100}%;
+            animation-duration: ${Math.random() * 4 + 2}s;
+            animation-delay: ${Math.random() * 5}s;
+            opacity: ${Math.random() * 0.7};
+        `;
+        container.appendChild(star);
+    }
+}
+
+// ===================== STORAGE =====================
+function saveData() {
+    localStorage.setItem('skillquest_data', JSON.stringify(gameData));
+    localStorage.setItem('skillquest_milestones', JSON.stringify([...achievedMilestones]));
+}
+
+function loadData() {
+    const saved = localStorage.getItem('skillquest_data');
+    if(saved) {
+        gameData = { ...gameData, ...JSON.parse(saved) };
+    }
+    const savedM = localStorage.getItem('skillquest_milestones');
+    if(savedM) {
+        achievedMilestones = new Set(JSON.parse(savedM));
+    }
+}
+
+function autoSave() {
+    saveData();
+}
+
+// ===================== STREAK =====================
+function updateStreak() {
+    const today = new Date().toDateString();
+    const lastActivity = gameData.lastActivity;
+    if(lastActivity) {
+        const last = new Date(lastActivity).toDateString();
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        if(last === today) {
+            // Same day, keep streak
+        } else if(last === yesterday) {
+            // Consecutive day
+        } else {
+            // Streak broken
+            gameData.streak = 0;
+        }
+    }
+}
+
+function recordActivity(action) {
+    const today = new Date().toDateString();
+    const lastActivity = gameData.lastActivity;
+    if(lastActivity) {
+        const last = new Date(lastActivity).toDateString();
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        if(last === yesterday) {
+            gameData.streak++;
+        } else if(last !== today) {
+            gameData.streak = 1;
+        }
+    } else {
+        gameData.streak = 1;
+    }
+    gameData.lastActivity = new Date().toISOString();
+
+    // Add to log
+    gameData.activityLog.unshift({
+        action,
+        time: new Date().toISOString()
+    });
+    if(gameData.activityLog.length > 20) {
+        gameData.activityLog.pop();
+    }
+}
+
+// ===================== XP & COINS =====================
+const XP_REWARDS = { beginner: 20, intermediate: 40, advanced: 70 };
+const COIN_REWARDS = { beginner: 30, intermediate: 60, advanced: 100 };
+
+function addXPAndCoins(course) {
+    const diff = course.difficulty || 'beginner';
+    const xp = XP_REWARDS[diff];
+    const coins = COIN_REWARDS[diff];
+
+    gameData.coins += coins;
+    gameData.totalXP += xp;
+    gameData.currentXP += xp;
+
+    // Check for level up
+    const currentLevelDef = getCurrentLevelDef();
+    if(gameData.currentXP >= currentLevelDef.xpToNext) {
+        gameData.currentXP -= currentLevelDef.xpToNext;
+        gameData.level = Math.min(gameData.level + 1, 10);
+        setTimeout(() => triggerLevelUp(), 1500);
+    }
+
+    return { xp, coins };
+}
+
+function getCurrentLevelDef() {
+    return LEVELS[Math.min(gameData.level - 1, LEVELS.length - 1)];
+}
+
+function triggerLevelUp() {
+    const overlay = document.getElementById('levelup-overlay');
+    const num = document.getElementById('levelup-num');
+    const sub = document.getElementById('levelup-sub');
+    const levelDef = getCurrentLevelDef();
+    num.textContent = gameData.level;
+    sub.textContent = levelDef.title;
+    overlay.classList.add('active');
+    spawnConfetti();
+    showToast('⬆️', 'LEVEL UP!', `You are now Level ${gameData.level} - ${levelDef.title}`, '#ffd700');
+    setTimeout(() => overlay.classList.remove('active'), 3000);
+}
+
+function spawnConfetti() {
+    const colors = ['#ffd700','#1e88e5','#00bcd4','#7c4dff','#00e676','#ff5252'];
+    for(let i = 0; i < 50; i++) {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.top = '-10px';
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+        el.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        el.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+        el.style.animationDelay = Math.random() * 0.5 + 's';
+        el.style.transform = `rotate(${Math.random() * 360}deg)`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 4000);
+    }
+}
+
+// ===================== CATEGORIES =====================
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+function addCategory() {
+    const name = document.getElementById('cat-name').value.trim();
+    const emoji = document.getElementById('cat-emoji').value.trim() || '📁';
+    const color = document.getElementById('cat-color').value;
+
+    if(!name) {
+        showToast('⚠️', 'Missing Name', 'Please enter a category name', '#ff9800');
+        return;
+    }
+
+    const cat = {
+        id: Date.now().toString(),
+        name,
+        emoji,
+        color,
+        createdAt: new Date().toISOString()
+    };
+
+    gameData.categories.push(cat);
+    document.getElementById('cat-name').value = '';
+    document.getElementById('cat-emoji').value = '';
+    closeModal('cat-modal');
+
+    recordActivity(`Created category: ${name}`);
+    checkAchievements();
+    checkMilestones();
+    renderAll();
+    saveData();
+    showToast('📁', 'Category Created!', `"${name}" is ready for courses`, '#00bcd4');
+}
+
+function deleteCategory(catId) {
+    if(!confirm('Delete this category and all its courses?')) return;
+    gameData.categories = gameData.categories.filter(c => c.id !== catId);
+    gameData.courses = gameData.courses.filter(c => c.categoryId !== catId);
+    renderAll();
+    saveData();
+    showToast('🗑️', 'Deleted', 'Category removed', '#ff5252');
+}
+
+// ===================== COURSES =====================
+function openAddCourseModal() {
+    const select = document.getElementById('course-cat-select');
+    select.innerHTML = '';
+    if(gameData.categories.length === 0) {
+        showToast('⚠️', 'No Categories', 'Please create a category first', '#ff9800');
+        openModal('cat-modal');
+        return;
+    }
+    gameData.categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = `${cat.emoji} ${cat.name}`;
+        select.appendChild(opt);
+    });
+    openModal('course-modal');
+}
+
+function addCourse() {
+    const name = document.getElementById('course-name-input').value.trim();
+    const url = document.getElementById('course-url-input').value.trim();
+    const catId = document.getElementById('course-cat-select').value;
+    const duration = document.getElementById('course-duration').value.trim();
+    const difficulty = document.getElementById('course-difficulty').value;
+    const note = document.getElementById('course-note-input').value.trim();
+
+    if(!name) {
+        showToast('⚠️', 'Missing Name', 'Please enter the course name', '#ff9800');
+        return;
+    }
+
+    const course = {
+        id: Date.now().toString(),
+        name,
+        url: url || '',
+        categoryId: catId,
+        duration: duration || '',
+        difficulty,
+        note,
+        completed: false,
+        completedAt: null,
+        addedAt: new Date().toISOString()
+    };
+
+    gameData.courses.push(course);
+
+    // Clear form
+    ['course-name-input','course-url-input','course-duration','course-note-input'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+
+    closeModal('course-modal');
+    recordActivity(`Added course: ${name}`);
+    checkAchievements();
+    checkMilestones();
+    renderAll();
+    saveData();
+    showToast('🎬', 'Course Added!', `"${name}" added to your library`, '#00e676');
+}
+
+function toggleCourse(courseId) {
+    const course = gameData.courses.find(c => c.id === courseId);
+    if(!course) return;
+
+    course.completed = !course.completed;
+
+    if(course.completed) {
+        course.completedAt = new Date().toISOString();
+        const { xp, coins } = addXPAndCoins(course);
+        recordActivity(`Completed: ${course.name}`);
+
+        // Show reward popup
+        showRewardPopup(course.name, coins, xp, course.difficulty);
+        // Burst coins from checkbox
+        spawnCoinBurst();
+
+        checkDailyGoals();
+        showToast('✅', 'Course Completed!', `+${coins} coins, +${xp} XP earned`, '#00e676');
+    } else {
+        course.completedAt = null;
+        // Deduct on uncheck
+        const diff = course.difficulty || 'beginner';
+        const xp = XP_REWARDS[diff];
+        const coins = COIN_REWARDS[diff];
+        gameData.coins = Math.max(0, gameData.coins - coins);
+        gameData.totalXP = Math.max(0, gameData.totalXP - xp);
+        gameData.currentXP = Math.max(0, gameData.currentXP - xp);
+        showToast('↩️', 'Marked Incomplete', 'Course unchecked', '#90caf9');
+    }
+
+    checkAchievements();
+    checkMilestones();
+    renderAll();
+    saveData();
+}
+
+function deleteCourse(courseId) {
+    gameData.courses = gameData.courses.filter(c => c.id !== courseId);
+    renderAll();
+    saveData();
+    showToast('🗑️', 'Deleted', 'Course removed', '#ff5252');
+}
+
+// ===================== REWARD POPUP =====================
+function showRewardPopup(courseName, coins, xp, diff) {
+    const emojis = { beginner: '🌟', intermediate: '💫', advanced: '🔥' };
+    document.getElementById('reward-emoji').textContent = emojis[diff] || '🎉';
+    document.getElementById('reward-title').textContent = 'Course Complete!';
+    document.getElementById('reward-subtitle').textContent = courseName;
+    document.getElementById('reward-coins-val').textContent = `+${coins}`;
+    document.getElementById('reward-xp-val').textContent = `+${xp} XP`;
+
+    const popup = document.getElementById('reward-popup');
+    popup.classList.add('active');
+    popup.classList.remove('fade-out');
+
+    setTimeout(() => {
+        popup.classList.add('fade-out');
+        setTimeout(() => {
+            popup.classList.remove('active','fade-out');
+        }, 500);
+    }, 2200);
+}
+
+function spawnCoinBurst() {
+    const burst = document.createElement('div');
+    burst.className = 'coin-burst';
+    burst.style.left = '50vw';
+    burst.style.top = '50vh';
+    document.body.appendChild(burst);
+
+    for(let i = 0; i < 12; i++) {
+        const coin = document.createElement('div');
+        coin.className = 'coin-particle';
+        const angle = (i / 12) * 360;
+        const dist = 80 + Math.random() * 60;
+        const tx = Math.cos(angle * Math.PI / 180) * dist + 'px';
+        const ty = Math.sin(angle * Math.PI / 180) * dist - 100 + 'px';
+        coin.style.setProperty('--tx', tx);
+        coin.style.setProperty('--ty', ty);
+        coin.style.animationDelay = (Math.random() * 0.2) + 's';
+        coin.textContent = '🪙';
+        burst.appendChild(coin);
+    }
+
+    setTimeout(() => burst.remove(), 2000);
+}
+
+// ===================== ACHIEVEMENTS =====================
+function checkAchievements() {
+    let newlyUnlocked = [];
+    ACHIEVEMENTS_DEF.forEach(ach => {
+        if(!gameData.achievements.includes(ach.id) && ach.condition(gameData)) {
+            gameData.achievements.push(ach.id);
+            newlyUnlocked.push(ach);
+        }
+    });
+    newlyUnlocked.forEach(ach => {
+        setTimeout(() => {
+            showToast(ach.icon, 'Achievement Unlocked!', ach.name + ' - ' + ach.desc, '#ffd700');
+            gameData.coins += 25;
+        }, 800);
+    });
+}
+
+// ===================== MILESTONES =====================
+function checkMilestones() {
+    MILESTONES_DEF.forEach(m => {
+        if(!achievedMilestones.has(m.id) && m.condition(gameData)) {
+            achievedMilestones.add(m.id);
+            gameData.coins += m.coins;
+            gameData.totalXP += m.xp;
+            gameData.currentXP += m.xp;
+            setTimeout(() => {
+                showToast(m.icon, 'Milestone Reached!', `${m.name}: +${m.coins}🪙 +${m.xp}XP`, '#7c4dff');
+            }, 1200);
+        }
+    });
+    saveData();
+}
+
+// ===================== DAILY GOALS =====================
+const DAILY_GOALS_POOL = [
+    { text: 'Complete 1 course today', check: d => d.activityLog.some(a => isToday(a.time) && a.action.startsWith('Completed')), xp: 20 },
+    { text: 'Add 2 new courses to library', check: d => d.activityLog.filter(a => isToday(a.time) && a.action.startsWith('Added')).length >= 2, xp: 10 },
+    { text: 'Visit your learning tracker', check: () => true, xp: 5 },
+    { text: 'Complete an advanced course', check: d => {
+        const todayCompleted = d.activityLog.filter(a => isToday(a.time) && a.action.startsWith('Completed'));
+        return todayCompleted.some(a => {
+            const course = d.courses.find(c => c.name === a.action.replace('Completed: ', ''));
+            return course && course.difficulty === 'advanced';
+        });
+    }, xp: 40 },
+    { text: 'Organize courses in categories', check: d => d.categories.length >= 1, xp: 10 },
+];
+
+function isToday(isoString) {
+    return new Date(isoString).toDateString() === new Date().toDateString();
+}
+
+function generateDailyGoals() {
+    const today = new Date().toDateString();
+    if(gameData.dailyGoalsDate !== today) {
+        gameData.dailyGoals = [0, 1, 2, 3, 4]; // indices from pool
+        gameData.dailyGoalsDate = today;
+    }
+}
+
+function checkDailyGoals() {
+    renderDailyGoals();
+}
+
+function refreshDailyGoals() {
+    gameData.dailyGoalsDate = null;
+    generateDailyGoals();
+    renderDailyGoals();
+    showToast('🔄', 'Goals Refreshed', 'Daily goals updated!', '#00bcd4');
+}
+
+function renderDailyGoals() {
+    const container = document.getElementById('daily-goals-list');
+    if(!container) return;
+    container.innerHTML = '';
+    const goals = DAILY_GOALS_POOL;
+    goals.forEach(goal => {
+        const done = goal.check(gameData);
+        const item = document.createElement('div');
+        item.className = 'daily-goal-item';
+        item.innerHTML = `
+            <div class="goal-check ${done ? 'done' : ''}">${done ? '✓' : ''}</div>
+            <div class="goal-text ${done ? 'done' : ''}">${goal.text}</div>
+            <div class="goal-xp">+${goal.xp}XP</div>
+        `;
+        container.appendChild(item);
+    });
+}
+
+// ===================== RENDER FUNCTIONS =====================
+function renderAll() {
+    updateHeaderStats();
+    renderCategories();
+    renderCategoryOverview();
+    renderRecentActivity();
+    renderAchievements();
+    renderMilestones();
+    updateQuickStats();
+    updateProgressRing();
+    renderDailyGoals();
+    updateProfileCard();
+}
+
+function updateHeaderStats() {
+    document.getElementById('header-coins').textContent = gameData.coins.toLocaleString();
+    document.getElementById('header-level').textContent = gameData.level;
+
+    const levelDef = getCurrentLevelDef();
+    const xpPercent = Math.min((gameData.currentXP / levelDef.xpToNext) * 100, 100);
+    document.getElementById('xp-bar').style.width = xpPercent + '%';
+    document.getElementById('xp-display').textContent = `${gameData.currentXP} / ${levelDef.xpToNext}`;
+}
+
+function updateProfileCard() {
+    const levelDef = getCurrentLevelDef();
+    document.getElementById('profile-name').textContent = gameData.playerName;
+    document.getElementById('player-title').textContent = levelDef.title;
+    document.getElementById('profile-level-badge').textContent = gameData.level;
+    document.getElementById('profile-avatar').textContent = AVATARS_BY_LEVEL[Math.min(gameData.level - 1, 9)];
+    document.getElementById('mini-coins').textContent = gameData.coins.toLocaleString();
+    document.getElementById('mini-xp').textContent = gameData.totalXP.toLocaleString();
+    document.getElementById('mini-done').textContent = gameData.courses.filter(c=>c.completed).length;
+    document.getElementById('mini-streak').textContent = gameData.streak;
+    document.getElementById('streak-days').textContent = `${gameData.streak} Day${gameData.streak !== 1 ? 's' : ''}`;
+}
+
+function updateQuickStats() {
+    document.getElementById('stat-total').textContent = gameData.courses.length;
+    document.getElementById('stat-completed').textContent = gameData.courses.filter(c=>c.completed).length;
+    document.getElementById('stat-coins').textContent = gameData.coins.toLocaleString();
+    document.getElementById('stat-achievements').textContent = gameData.achievements.length;
+}
+
+function updateProgressRing() {
+    const total = gameData.courses.length;
+    const done = gameData.courses.filter(c=>c.completed).length;
+    const pct = total > 0 ? Math.round((done/total)*100) : 0;
+    const circumference = 251.2;
+    const offset = circumference - (pct / 100) * circumference;
+    document.getElementById('ring-progress').style.strokeDashoffset = offset;
+    document.getElementById('ring-pct').textContent = pct + '%';
+}
+
+function renderCategories() {
+    const container = document.getElementById('categories-list');
+    if(!container) return;
+
+    if(gameData.categories.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🚀</div>
+                <h3>No courses yet!</h3>
+                <p>Add a category and start adding your YouTube learning resources</p>
+                <button class="btn btn-primary" style="margin-top:16px;" onclick="openModal('cat-modal')">+ Add Category</button>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = '';
+    gameData.categories.forEach(cat => {
+        const catCourses = getFilteredCourses(gameData.courses.filter(c => c.categoryId === cat.id));
+        const allCatCourses = gameData.courses.filter(c => c.categoryId === cat.id);
+        const total = allCatCourses.length;
+        const done = allCatCourses.filter(c => c.completed).length;
+        const pct = total > 0 ? Math.round((done/total)*100) : 0;
+
+        const card = document.createElement('div');
+        card.className = 'category-card';
+        card.id = `cat-${cat.id}`;
+
+        card.innerHTML = `
+            <div class="category-header" onclick="toggleCategory('${cat.id}')">
+                <div class="category-left">
+                    <div class="category-emoji" style="background:rgba(${hexToRgb(cat.color)},0.15); border-color:rgba(${hexToRgb(cat.color)},0.4)">
+                        ${cat.emoji}
+                    </div>
+                    <div class="category-info">
+                        <h3>${cat.name}</h3>
+                        <div class="category-meta">
+                            <span class="meta-tag">📚 ${total} courses</span>
+                            <span class="meta-tag">✅ ${done} done</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:16px;">
+                    <div class="category-progress-mini">
+                        <div class="progress-pct">${pct}%</div>
+                        <div class="progress-bar-mini">
+                            <div class="progress-bar-fill" style="width:${pct}%; background:linear-gradient(90deg, ${cat.color}, ${cat.color}aa)"></div>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteCategory('${cat.id}')" title="Delete Category">🗑️</button>
+                    <span class="collapse-icon">▼</span>
+                </div>
+            </div>
+            <div class="courses-list" id="courses-${cat.id}">
+                ${catCourses.length === 0 ? renderEmptyCourseState(cat.id) : catCourses.map(c => renderCourseItem(c)).join('')}
+                <div style="padding:8px; border-top:1px solid rgba(21,101,192,0.1); margin-top:4px;">
+                    <button class="btn btn-secondary btn-sm" onclick="quickAddCourse('${cat.id}')" style="width:100%;">
+                        + Add Course to ${cat.name}
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function renderEmptyCourseState(catId) {
+    return `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">
+        No courses yet${currentFilter !== 'all' ? ' matching filter' : ''}. Add your first YouTube course!
+    </div>`;
+}
+
+function renderCourseItem(course) {
+    const diffClass = `diff-${course.difficulty || 'beginner'}`;
+    const linkBtn = course.url ? 
+        `<a href="${course.url}" target="_blank" class="link-btn" title="Open Resource">▶</a>` :
+        `<div class="link-btn" style="opacity:0.3;cursor:default;" title="No link">🔗</div>`;
+    
+    return `
+        <div class="course-item ${course.completed ? 'completed' : ''}" id="course-${course.id}">
+            <div class="custom-checkbox">
+                <input type="checkbox" ${course.completed ? 'checked' : ''} onchange="toggleCourse('${course.id}')">
+                <div class="checkmark"></div>
+            </div>
+            <div class="course-info">
+                <div class="course-name" title="${course.name}">${course.name}</div>
+                <div class="course-meta-row">
+                    ${course.duration ? `<span class="course-duration">⏱️ ${course.duration}</span>` : ''}
+                    <span class="difficulty-badge ${diffClass}">${course.difficulty || 'beginner'}</span>
+                    <span class="course-xp">+${XP_REWARDS[course.difficulty||'beginner']} XP</span>
+                </div>
+                ${course.note ? `<div class="course-note">💬 ${course.note}</div>` : ''}
+            </div>
+            <div class="course-actions">
+                ${linkBtn}
+                <div class="delete-btn" onclick="deleteCourse('${course.id}')" title="Delete">🗑️</div>
+            </div>
+        </div>
+    `;
+}
+
+function getFilteredCourses(courses) {
+    switch(currentFilter) {
+        case 'completed': return courses.filter(c => c.completed);
+        case 'pending': return courses.filter(c => !c.completed);
+        case 'beginner': return courses.filter(c => c.difficulty === 'beginner');
+        case 'intermediate': return courses.filter(c => c.difficulty === 'intermediate');
+        case 'advanced': return courses.filter(c => c.difficulty === 'advanced');
+        default: return courses;
+    }
+}
+
+function setFilter(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCategories();
+}
+
+function toggleCategory(catId) {
+    const card = document.getElementById(`cat-${catId}`);
+    card.classList.toggle('collapsed');
+}
+
+function quickAddCourse(catId) {
+    const select = document.getElementById('course-cat-select');
+    select.innerHTML = '';
+    gameData.categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = `${cat.emoji} ${cat.name}`;
+        if(cat.id === catId) opt.selected = true;
+        select.appendChild(opt);
+    });
+    openModal('course-modal');
+}
+
+function renderCategoryOverview() {
+    const container = document.getElementById('cat-overview');
+    if(!container) return;
+
+    if(gameData.categories.length === 0) {
+        container.innerHTML = `<div class="empty-state" style="padding:20px;">
+            <div class="empty-icon">📁</div><p>No categories yet</p>
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = '';
+    gameData.categories.forEach(cat => {
+        const courses = gameData.courses.filter(c => c.categoryId === cat.id);
+        const done = courses.filter(c => c.completed).length;
+        const pct = courses.length > 0 ? Math.round((done/courses.length)*100) : 0;
+
+        const item = document.createElement('div');
+        item.style.cssText = 'padding:10px;background:rgba(5,20,40,0.5);border:1px solid rgba(21,101,192,0.15);border-radius:10px;';
+        item.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <span style="font-size:13px;font-weight:600;">${cat.emoji} ${cat.name}</span>
+                <span style="font-size:12px;color:var(--accent-glow);font-weight:700;">${done}/${courses.length}</span>
+            </div>
+            <div class="progress-bar-mini">
+                <div class="progress-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,${cat.color},${cat.color}aa);"></div>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+}
+
+function renderRecentActivity() {
+    const container = document.getElementById('recent-activity');
+    if(!container) return;
+
+    if(gameData.activityLog.length === 0) {
+        container.innerHTML = `<div class="empty-state" style="padding:20px;">
+            <div class="empty-icon">📋</div><p>No activity yet. Start learning!</p>
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = '';
+    gameData.activityLog.slice(0, 6).forEach(log => {
+        const item = document.createElement('div');
+        item.style.cssText = 'padding:10px 14px;background:rgba(5,20,40,0.5);border:1px solid rgba(21,101,192,0.12);border-radius:10px;display:flex;align-items:center;gap:10px;';
+        const timeAgo = getTimeAgo(log.time);
+        const icon = log.action.startsWith('Completed') ? '✅' : log.action.startsWith('Added') ? '➕' : log.action.startsWith('Created') ? '📁' : '📝';
+        item.innerHTML = `
+            <span style="font-size:18px;">${icon}</span>
+            <div style="flex:1;">
+                <div style="font-size:12px;font-weight:600;">${log.action}</div>
+                <div style="font-size:10px;color:var(--text-muted);">${timeAgo}</div>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+}
+
+function getTimeAgo(isoString) {
+    const diff = Date.now() - new Date(isoString).getTime();
+    const mins = Math.floor(diff / 60000);
+    const hrs = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if(mins < 1) return 'Just now';
+    if(mins < 60) return `${mins}m ago`;
+    if(hrs < 24) return `${hrs}h ago`;
+    return `${days}d ago`;
+}
+
+function renderAchievements() {
+    const grid = document.getElementById('achievements-grid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    ACHIEVEMENTS_DEF.forEach(ach => {
+        const unlocked = gameData.achievements.includes(ach.id);
+        const item = document.createElement('div');
+        item.className = `achievement-item ${unlocked ? 'unlocked' : 'locked'}`;
+        item.innerHTML = `
+            ${unlocked ? '<span class="achievement-badge">✨</span>' : ''}
+            <span class="achievement-icon">${ach.icon}</span>
+            <div class="achievement-name">${ach.name}</div>
+            <div class="achievement-desc">${ach.desc}</div>
+        `;
+        grid.appendChild(item);
+    });
+}
+
+function renderMilestones() {
+    const list = document.getElementById('milestones-list');
+    if(!list) return;
+    list.innerHTML = '';
+    MILESTONES_DEF.forEach(m => {
+        const achieved = achievedMilestones.has(m.id);
+        const item = document.createElement('div');
+        item.className = `milestone-item ${achieved ? 'achieved' : ''}`;
+        item.innerHTML = `
+            <div class="milestone-icon">${m.icon}</div>
+            <div class="milestone-info">
+                <div class="milestone-name" style="color:${achieved?'var(--success)':'var(--text-primary)'}">
+                    ${achieved ? '✅ ' : ''}${m.name}
+                </div>
+                <div class="milestone-desc">${m.desc}</div>
+            </div>
+            <div class="milestone-reward">+${m.coins}🪙 ${m.xp>0?`+${m.xp}XP`:''}</div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+// ===================== UI HELPERS =====================
+function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    event.target.classList.add('active');
+}
+
+function showToast(icon, title, sub, color='#1e88e5') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.borderColor = color + '60';
+    toast.innerHTML = `
+        <span class="toast-icon">${icon}</span>
+        <div>
+            <div class="toast-text" style="color:${color}">${title}</div>
+            <div class="toast-sub">${sub}</div>
+        </div>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 400);
+    }, 3500);
+}
+
+function editName() {
+    const current = gameData.playerName;
+    const newName = prompt('Enter your adventurer name:', current);
+    if(newName && newName.trim()) {
+        gameData.playerName = newName.trim();
+        renderAll();
+        saveData();
+        showToast('✏️', 'Name Updated!', `Welcome, ${newName}!`, '#00bcd4');
+    }
+}
+
+function openLevelModal() {
+    const levelDef = getCurrentLevelDef();
+    const nextLevel = LEVELS[Math.min(gameData.level, LEVELS.length - 1)];
+    document.getElementById('level-modal-content').innerHTML = `
+        <div style="text-align:center;margin-bottom:20px;">
+            <div style="font-size:60px;">${AVATARS_BY_LEVEL[gameData.level-1]}</div>
+            <div style="font-size:28px;font-weight:900;color:var(--gold);">Level ${gameData.level}</div>
+            <div style="color:var(--accent-cyan);font-size:14px;">${levelDef.title}</div>
+        </div>
+        <div style="background:rgba(5,20,40,0.5);border:1px solid rgba(21,101,192,0.2);border-radius:12px;padding:16px;margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:12px;color:var(--text-muted);">XP Progress</span>
+                <span style="font-size:12px;color:var(--accent-glow)">${gameData.currentXP} / ${levelDef.xpToNext}</span>
+            </div>
+            <div class="xp-bar-outer"><div class="xp-bar-inner" style="width:${Math.min((gameData.currentXP/levelDef.xpToNext)*100,100)}%"></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            ${LEVELS.map(l => `
+                <div style="padding:10px;border-radius:10px;background:rgba(5,20,40,${gameData.level>=l.level?0.8:0.3});border:1px solid rgba(21,101,192,${gameData.level>=l.level?0.5:0.1});display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:20px;">${AVATARS_BY_LEVEL[l.level-1]}</span>
+                    <div>
+                        <div style="font-size:12px;font-weight:700;color:${gameData.level>=l.level?'var(--gold)':'var(--text-muted)'}">Level ${l.level}</div>
+                        <div style="font-size:10px;color:var(--text-muted)">${l.title.replace(/[^\x00-\x7F]/g,'').trim()}</div>
+                    </div>
+                    ${gameData.level>=l.level?'<span style="margin-left:auto;font-size:16px;">✅</span>':''}
+                </div>
+            `).join('')}
+        </div>
+    `;
+    openModal('level-modal');
+}
+
+function hexToRgb(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `${r},${g},${b}`;
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+        if(e.target === overlay) overlay.classList.remove('active');
+    });
+});
+
+// ===================== START =====================
+init();
+</script>
+</body>
+</html>
